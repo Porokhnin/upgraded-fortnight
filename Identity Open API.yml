@@ -1,0 +1,551 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "warmhouse.identity",
+    "version": "1.0"
+  },
+  "paths": {
+    "/v1/identity/register": {
+      "post": {
+        "tags": [
+          "Identity"
+        ],
+        "summary": "Зарегистрировать пользователя",
+        "requestBody": {
+          "description": "Запрос на регистриацию",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ошибка бизнес логики",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации данных запроса",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Regisrtration successful"
+          }
+        }
+      }
+    },
+    "/v1/identity/login": {
+      "post": {
+        "tags": [
+          "Identity"
+        ],
+        "summary": "Залогинить пользователя",
+        "description": "Получение токена авторизации. Токен используется при всех остальных запросах.\n\r\nПолученный токен должен быть использован в запросах к сервисам в заголовке \"Authorize\". \nПример: \"Bearer YOUR_TOKEN\".",
+        "requestBody": {
+          "description": "Запрос на логин",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful, token generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ошибка бизнес логики",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации данных запроса",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/identity/restorepassword": {
+      "post": {
+        "tags": [
+          "Identity"
+        ],
+        "summary": "Запросить восстановление пароля",
+        "description": "Генерируется новый пароль и отправляется на почту",
+        "requestBody": {
+          "description": "Запрос на восстановление пароля",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestorePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Пароль сгенерирован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestorePasswordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ошибка бизнес логики",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации данных запроса",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/identity/refreshtoken": {
+      "post": {
+        "tags": [
+          "Identity"
+        ],
+        "summary": "Обновить токен",
+        "requestBody": {
+          "description": "Запрос на refresh",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ошибка бизнес логики",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации данных запроса",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/identity/signin-google": {
+      "post": {
+        "tags": [
+          "Identity"
+        ],
+        "summary": "Подтвердить авторизацию в google",
+        "description": "Подтверждение",
+        "requestBody": {
+          "description": "Запрос на авторизацию в google",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInGoogleRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful, token generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignInGoogleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации запроса",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Ошибка бизнес логики",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации данных запроса",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Пароль",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Запрос логина пользователя"
+      },
+      "LoginResponse": {
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Идентификатор пользователя",
+            "format": "uuid"
+          },
+          "accessToken": {
+            "type": "string",
+            "description": "Access токен"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh токен"
+          },
+          "validFrom": {
+            "type": "string",
+            "description": "Дата начала действия токена",
+            "format": "date-time",
+            "nullable": true
+          },
+          "validTo": {
+            "type": "string",
+            "description": "Дата протухания токена",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Ответ на запрос логина пользователя"
+      },
+      "ProblemDetails": {
+        "required": [
+          "instance",
+          "requestId",
+          "title",
+          "traceId"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RefreshTokenRequest": {
+        "required": [
+          "accessToken",
+          "refreshToken"
+        ],
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Access токен"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Refresh токен"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Запрос обновления токена"
+      },
+      "RefreshTokenResponse": {
+        "required": [
+          "accessToken",
+          "refreshToken"
+        ],
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Access Токен"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Refres Токен"
+          },
+          "validFrom": {
+            "type": "string",
+            "description": "Дата начала токена",
+            "format": "date-time",
+            "nullable": true
+          },
+          "validTo": {
+            "type": "string",
+            "description": "Дата протухания токена",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Ответ на запрос обновления токена"
+      },
+      "RegistrationRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Имя пользователя",
+            "nullable": true
+          },
+          "email": {
+            "type": "string",
+            "description": "Email",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Пароль",
+            "nullable": true
+          },
+          "passwordConfirmation": {
+            "type": "string",
+            "description": "Подтверждение пароля",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Запрос регистрации пользователя"
+      },
+      "RegistrationResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Ответ на запрос регистрации пользователя"
+      },
+      "RestorePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Запрос восстановления забытого пароля"
+      },
+      "RestorePasswordResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Ответ на запрос восстановления забытого пароля"
+      },
+      "SignInGoogleRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email",
+            "nullable": true
+          },
+          "password": {
+            "type": "string",
+            "description": "Пароль",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Запрос логина пользователя"
+      },
+      "SignInGoogleResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Ответ логина пользователя"
+      }
+    },
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "description": "Please enter JWT token in this field",
+        "scheme": "Bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": [ ]
+    }
+  ]
+}
