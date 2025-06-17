@@ -60,7 +60,39 @@
 В задании было сказано про sequance диаграммы, решил отрисовать их.
 
 ```markdown
-[register user sequance](https://www.plantuml.com/plantuml/png/fP9FZjCm5CRtFeMLxUZr05KLpI5WZPpO2fRIfZWE4JiwGcmOgKjOyOSJX868Q63IAppVY6U7C25G1iegiVtzFh_l-PsNLXXRhNF6xccRAnxXMspn8tPkvoxSKspSS_hVSpnWZr_S9NwcxnLjNs1Bwtt4c4XjONXqlrGcugBa5VsmBTdgL6_5nlAe5cRziA1zM1U9pXLKEYZJNAkDlKER2QjgyIG0MNrCh2KvQJl8nWMJmef4b6gYVF2JKYRiKQMggM0n2XO-IBamAjEbLKR9G0GvOymVGZmaE3jR_cFRs012dDKdm5aDyLZb2VY8GYmJZx_41Wy4zcx7iSCRzmnxMduTdB3Zs1ynm_Q7sGfa0h34LtFUxV-Alqsqn3T4UrLBtsji_j08KrHRZkzzQhoXumQlXpiPv_EOxx0dnQUWxB0zwZf3VmNTZZO-k1S4-7H-4XQfKS8gIQnK8hNwCQtyTAcDPFHUAvYa--srbzoNJq6cJzaDZV0ttpOAuZ23Fj9hWWyX_9LlrAoooTj0G03kHDYa_15dtwTr1JHuS780twSL35R_ONDEBQtM-JS0)
+@startuml
+
+Title "Регистрация пользователя"
+
+actor "User" as user
+participant "warmhouse-mobile-ui" as client
+participant "warmhouse-mobile-gateway" as gw
+participant "warmhouse-identity" as identity
+database "warmhouse_identity" as db
+queue "warmhouse.identity.users.registered" as queue
+
+
+user->client++:Регистрация пользователя
+client->gw++:Регистрация пользователя
+gw->identity++:Регистрация пользователя
+identity->db++:Запрос информации о пользователе
+identity<-db--:Информация о пользователе
+identity->identity:Проверка пользователя
+group Транзакция
+  identity->db++:Создание пользователя
+  identity->db:Создание события user.created
+  deactivate db
+end
+
+gw<-identity:Пользователь зарегистрирован
+identity-->queue++:Отправка события
+identity<--queue--:Отправка события
+
+deactivate identity
+
+client<-gw--:Пользователь зарегистрирован
+user<-client--:Пользователь зарегистрирован
+@enduml
 ``` 
 
 ```markdown
