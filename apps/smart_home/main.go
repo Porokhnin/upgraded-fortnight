@@ -16,6 +16,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	KafkaServer = "kafka:9092"
+	KafkaTopic  = "warmhouse.devices.registered"
+)
+
 func main() {
 	// Set up database connection
 	dbURL := getEnv("DATABASE_URL", "postgresql://postgres:postgres@127.0.0.1:5432/smarthome")
@@ -31,6 +36,12 @@ func main() {
 	temperatureAPIURL := getEnv("TEMPERATURE_API_URL", "http://temperature-api:8081")
 	temperatureService := services.NewTemperatureService(temperatureAPIURL)
 	log.Printf("Temperature service initialized with API URL: %s\n", temperatureAPIURL)
+
+	kafkaServerAddress := getEnv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
+	kafkaConsumerTopic := getEnv("KAFKA_DEVICE_REGISTERED_TOPIC", "warmhouse.devices.registered")
+	kafkaConsumerService := services.NewKafkaConsumerService(database, kafkaServerAddress, kafkaConsumerTopic)
+	kafkaConsumerService.Start()
+	log.Printf("kafkaConsumerService initialized with kafka address and topic: %s %s\n", kafkaServerAddress, kafkaConsumerTopic)
 
 	// Initialize router
 	router := gin.Default()

@@ -1,0 +1,6 @@
+@warmhouse_HostAddress = http://localhost:5291
+
+GET {{warmhouse_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

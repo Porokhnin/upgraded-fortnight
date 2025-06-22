@@ -1,0 +1,13 @@
+services:
+  warmhouse.devices:
+    image: ${DOCKER_REGISTRY-}warmhousedevices
+    build:
+      context: warmhouse.devices
+      dockerfile: Dockerfile
+
+  warmhouse.telemetry:
+    image: ${DOCKER_REGISTRY-}warmhousetelemetry
+    build:
+      context: warmhouse.telemetry
+      dockerfile: Dockerfile
+
