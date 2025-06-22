@@ -1,0 +1,33 @@
+@startuml
+
+Title "Регистрация пользователя"
+
+actor "User" as user
+participant "warmhouse-mobile-ui" as client
+participant "warmhouse-mobile-gateway" as gw
+participant "warmhouse-identity" as identity
+database "warmhouse_identity" as db
+queue "warmhouse.identity.users.registered" as queue
+
+
+user->client++:Регистрация пользователя
+client->gw++:Регистрация пользователя
+gw->identity++:Регистрация пользователя
+identity->db++:Запрос информации о пользователе
+identity<-db--:Информация о пользователе
+identity->identity:Проверка пользователя
+group Транзакция
+  identity->db++:Создание пользователя
+  identity->db:Создание события user.created
+  deactivate db
+end
+
+gw<-identity:Пользователь зарегистрирован
+identity-->queue++:Отправка события
+identity<--queue--:Отправка события
+
+deactivate identity
+
+client<-gw--:Пользователь зарегистрирован
+user<-client--:Пользователь зарегистрирован
+@enduml

@@ -1,35 +1,178 @@
 version: '3.8'
 
 services:
+
   postgres:
     image: postgres:16-alpine
     container_name: smarthome-postgres
-  ## тут нужно добавить настройки
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: smarthome
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./smart_home/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - smarthome-network
+    healthcheck:
+      test: pg_isready -d smarthome -U postgres
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.4
+    container_name: zookeeper
+    healthcheck:
+      test: [ "CMD", "nc", "-vz", "localhost", "2181" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+    networks:
+      - smarthome-network
+
+
+  kafka:
+    image: confluentinc/cp-kafka:6.2.4
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - 29092:29092
+    healthcheck:
+      test: [ "CMD", "nc", "-vz", "localhost", "9092" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: OUTSIDE://:29092,INTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: OUTSIDE://localhost:29092,INTERNAL://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - smarthome-network
+
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "7080:8080"
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    networks:
+      - smarthome-network
+
+
+  kafka-topics-generator:
+    image: confluentinc/cp-kafka:6.2.4
+    container_name: kafka-topics-generator
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+        "
+        # blocks until kafka is reachable
+        kafka-topics --bootstrap-server kafka:9092 --list
+        
+        echo -e 'Creating kafka topics'
+        kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic warmhouse.devices.registered --replication-factor 1 --partitions 2
+        
+        echo -e 'Successfully created the following topics:'
+        kafka-topics --bootstrap-server kafka:9092 --list
+        "
+    networks:
+      - smarthome-network
+
 
   temperature-api:
-  ## тут нужно добавить приложение
+    build:
+      context: ./temperature-api
+      dockerfile: Dockerfile
+    container_name: temperature-api
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+    networks:
+      - smarthome-network
 
-  app:
+
+  monolith:
     build:
       context: ./smart_home
       dockerfile: Dockerfile
-    container_name: smarthome-app
+    container_name: smarthome-monolith
     depends_on:
       postgres:
         condition: service_healthy
       temperature-api:
         condition: service_started
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/smarthome
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@smarthome-postgres:5432/smarthome
       - TEMPERATURE_API_URL=http://temperature-api:8081
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_DEVICE_REGISTERED_TOPIC=warmhouse.devices.registered
     ports:
       - "8080:8080"
     restart: unless-stopped
     networks:
       - smarthome-network
 
+
+  devices:
+    build:
+      context: ./warmhouse/warmhouse.devices
+      dockerfile: Dockerfile
+    container_name: warmhouse-devices
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=80
+    ports:
+      - "8082:80"
+    networks:
+      - smarthome-network
+
+
+  telemetry:
+    build:
+      context: ./warmhouse/warmhouse.telemetry
+      dockerfile: Dockerfile 
+    container_name: warmhouse-telemetry
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=80
+    ports:
+      - "8083:80"
+    networks:
+      - smarthome-network
+
+
 volumes:
-  postgres_data:
+  postgres-data:
 
 networks:
   smarthome-network:

@@ -1,0 +1,82 @@
+@startuml
+
+title "Аутентификация и авторизация пользователя"
+
+actor User as user
+participant "warmhouse-mobile-UI" as client
+participant "warmhouse-mobile-gateway" as gw
+participant "warmhouse-identity" as identity
+participant "warmhouse-backend" as back
+database "warmhouse_identity " as db
+
+
+group #White Авторизация по логину и паролю
+
+    user->client++: Ввод логина и пароля
+    client->gw++: Вызов метода авторизации
+    gw->identity++: Вызов метода авторизации
+    identity->db++: Запрос информации о пользователе
+    identity<-db--: Информация о пользователе
+    identity->identity: Аутентификация
+    identity->identity: Генерация токена
+    gw<-identity--: Информация доступа
+    note right
+    {
+        "accessToken": "aaa.bbb.ccc",
+        "refreshToken": "c36cdc...",
+        "expiresIn": 300
+    }
+    end note
+    client<-gw--: Информация доступа
+    user<-client--
+
+end
+
+
+group #FFFFFF  Обработка пользовательского запроса
+
+    user->client++: Запрос пользователя
+    client->client: Проверка срока жизни accessToken
+
+    opt #FFFFFF accessToken просрочен
+        alt #FFFFFF refreshToken валиден
+            client->gw++: Обновление токена
+            gw->identity++: Обновление токена
+            identity->db++: Запрос информации о пользователе
+            identity<-db--: Информация о пользователе
+            identity->identity:Валидация refreshToken
+            identity->identity: Генерация токена
+            gw<-identity--: Информация доступа
+            note right
+            {
+                "accessToken": "aaa.bbb.ccc",
+                "refreshToken": "c36cdc...",
+                "expiresIn": 300
+            }
+            end note
+            client<-gw--: Информация доступа
+        else <font color=red><b>  refreshToken невалиден
+            client->gw++: Обновление токена
+            gw->identity++: Обновление токена
+            identity->identity:Валидация refreshToken
+            gw<-[#red]identity--: Ошибка обновления
+            client<-[#red]gw--: <font color=red><b>401 Unauthorized
+            user<-[#red]client: Введите пароль
+        end
+    end
+    
+    client->gw++: Запрос пользователя
+    gw->gw: Валидация accessToken
+
+    alt #FFFFFF accessToken валиден
+      gw->back++: Запрос пользователя
+      gw<-back--: Ответ на запрос пользователя
+      client<-gw: Ответ на запрос пользователя
+      user<-client: Ответ на запрос пользователя
+    else <font color=red><b> accessToken не валиден
+      client<-[#red]gw: <font color=red><b>401 Unauthorized
+      user<-[#red]client: Введите пароль
+    end
+end
+
+@enduml

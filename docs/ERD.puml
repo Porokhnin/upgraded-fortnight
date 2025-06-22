@@ -1,0 +1,188 @@
+@startuml
+
+' hide the spot
+' hide circle
+
+' avoid problems with angled crows feet
+skinparam linetype ortho
+
+entity "User" as user {
+  *Id : Guid <<PK>>
+  --
+  *Name : text
+  *LastName : text
+  *Email : text(128)
+  *PasswordHash:text(512)
+  Phone : text(12)
+  LastLoginAt: datetime
+  CreatedAt: datetime
+  UpdatedAt: datetime
+}
+
+entity "Role" as role {
+  *Id : Guid <<PK>>
+  --
+  *Name : text(128)
+}
+
+entity "RoleClaim" as roleClaim {
+  *Id : Guid <<PK>>
+  --
+  *RoleId : Guid <<FK>>
+  *ClaimType : text(128)
+  *ClaimValue : text(128)
+}
+
+entity "House" as house {
+  *Id : Guid <<PK>>
+  --
+  *UserId : Guid <<FK>>
+  *Name : text(64)
+  Description : text(512)
+  *CreatedAt: datetime
+  UpdatedAt: datetime
+}
+
+entity "Location" as location {
+  *Id : Guid <<PK>>
+  --
+  *HouseId : Guid <<FK>>
+  *Name : text(64)
+  Description : text(512)
+}
+
+entity "Device" as device {
+  *Id : Guid <<PK>>
+  --
+  UserId : Guid <<FK>>
+  LocationId : Guid <<FK>>
+  DeviceTypeId : Guid <<FK>>
+  SerialNumber:text(64)
+  Number:text(64)
+  Description : text(512)
+}
+
+entity "DeviceType" as deviceType {
+  *Id : Guid <<PK>>
+  --
+  Name:text(64)
+  Code:text(64)
+  Description : text(512)
+}
+
+entity "Sensor" as sensor {
+  *Id : Guid <<PK>>
+  --
+  *DeviceId : Guid <<FK>>
+  *SensorTypeId : Guid <<FK>>
+  *SerialNumber:text(64)
+  Number:text(64)
+  Description : text(512)
+}
+
+entity "SensorType" as sensorType {
+  *Id : Guid <<PK>>
+  --
+  *Name:text(64)
+  *Code:text(64)
+  *Description : text(512)
+}
+
+entity "Subscription" as subscription {
+  *Id : Guid <<PK>>
+  --
+  *From : datetime
+  *To : datetime
+  *Status : int
+}
+
+entity "TelemetryDeviceData" as telemetryDeviceData {
+  *Id : Guid <<PK>>
+  --
+  *DeviceSerialNumber:text(64)
+  *When : datetime
+  *Status : int
+}
+
+entity "TelemetrySensorData" as telemetrySensorData {
+  *Id : Guid <<PK>>
+  --
+  *TelemetryDeviceDataId : Guid <<FK>>
+  *SensorSerialNumber:text(64)
+  *When : datetime
+  *SensorStatus : int
+  *SensorValue : int
+}
+
+entity "Invoice" as invoice {
+  *Id : Guid <<PK>>
+  --
+  *SubscriptionId : Guid <<FK>>
+  *Status : int
+  *ActiveFrom : datetime
+  *ActiveTo : datetime
+  *Price : double
+}
+
+entity "Payment" as payment {
+  *Id : Guid <<PK>>
+  --
+  *UserId : Guid <<FK>>
+  *InvoiceId : Guid <<FK>>
+  *Status : int
+  *When : datetime
+  *Price : double
+}
+
+entity "Scenario" as scenario {
+  *Id : Guid <<PK>>
+  --
+  *UserId : Guid <<FK>>
+
+  *Status : int
+  *Start : datetime
+  *Stop : datetime
+  *Name:text(64)
+  Description : text(512)
+}
+
+entity "ScenarioRule" as scenarioRule {
+  *Id : Guid <<PK>>
+  --
+  *ScenarioId : Guid <<FK>>
+  *Status : int
+  *Name:text(64)
+  Description : text(512)
+}
+
+entity "Notification" as notification {
+  *Id : Guid <<PK>>
+  --
+  *UserId : Guid <<FK>>
+  *Status : int
+  *When:text(64)
+  *To : text(512)
+  *Subject : text(128)
+  *Body : text
+}
+
+user }o..|{ role
+role ||..|{ roleClaim
+user ||..|{ house
+house ||..|{ location
+user ||..|{ device
+device }|..|| deviceType
+location ||..o{ device
+device ||..|{ sensor
+sensor }|..|| sensorType
+user ||..o{ payment
+user ||..o{ subscription
+subscription ||..|{ invoice
+invoice ||..o{ payment
+user ||..o{ notification
+user ||..o{ scenario
+scenario ||..o{ scenarioRule
+scenarioRule }o..o{ sensor
+device ||..o{ telemetryDeviceData
+telemetryDeviceData ||..|{ telemetrySensorData
+@enduml
